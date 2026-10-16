@@ -1,37 +1,50 @@
 #include <Arduino.h>
 
-// TP1 - Manipulation 6a : temps de reponse du capteur
+// TP1 - Manipulation 6b : detection synchronisee
+// A COMPLETER : cherchez les commentaires "TODO"
 const int PIN_OUT = 2;
 const int PIN_ENABLE = 3;
+const int PIN_LED = 13;
 void setup() {
   pinMode(PIN_OUT, INPUT);
   pinMode(PIN_ENABLE, OUTPUT);
-  digitalWrite(PIN_ENABLE, LOW); // emetteur eteint au depart
+  pinMode(PIN_LED, OUTPUT);
   Serial.begin(9600);
 }
 
+// Renvoie 1 : objet reellement detecte
+// 0 : rien
+// -1 : perturbation IR exterieure
+int mesureSynchronisee() {
+  digitalWrite(PIN_ENABLE, HIGH); // emetteur allume
+  delay(2); // TODO (Q22) : justifier cette attente
+  int outOn = digitalRead(PIN_OUT);
+  digitalWrite(PIN_ENABLE, LOW); // emetteur eteint
+  delay(2);
+  int outOff = digitalRead(PIN_OUT);
+  if (outOff == LOW){return -1;}
+  else if (outOn == LOW){return 1;}
+  return 0;
+// TODO : renvoyer -1 si outOff vaut LOW
+// renvoyer 1 si outOn vaut LOW (et outOff vaut HIGH)
+// renvoyer 0 dans tous les autres cas
+}
+
 void loop() {
-  // 1) Emetteur eteint : on attend que OUT soit revenue a HIGH
-  digitalWrite(PIN_ENABLE, LOW);
-  delay(10);
-  if (digitalRead(PIN_OUT) == LOW) {
-    Serial.println("OUT deja a LOW emetteur eteint : signal IR parasite ?");
-    delay(500);
-  return;
+  int r = mesureSynchronisee();
+  if (r==1){
+    digitalWrite(PIN_LED, HIGH);
+    Serial.println("Objet");
   }
-  // 2) On allume l’emetteur et on chronometre jusqu’au passage a LOW
-  unsigned long t0 = micros();
-  digitalWrite(PIN_ENABLE, HIGH);
-  while (digitalRead(PIN_OUT) == HIGH) {
-  if (micros() - t0 > 5000) break; // abandon au bout de 5 ms
+  else if (r==0) {
+    digitalWrite(PIN_LED, LOW);
+    Serial.println("Rien");
   }
-  unsigned long dt = micros() - t0;
-  if (dt > 5000) {
-    Serial.println("Pas de detection (aucun objet ?)");
-  } else {
-    Serial.print("Temps de reponse : ");
-    Serial.print(dt);
-    Serial.println(" us");
+  else {
+    digitalWrite(PIN_LED, LOW);
+    Serial.println("Pertubation IR");
   }
-  delay(500);
+  // TODO : allumer PIN_LED uniquement si r vaut 1, et afficher
+  // "Objet", "Rien" ou "Perturbation IR !" dans le moniteur serie
+  delay(100);
 }
