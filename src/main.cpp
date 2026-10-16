@@ -16,9 +16,14 @@ void loop() {
   // Emetteur actif pendant 2 s
   digitalWrite(PIN_ENABLE, HIGH);
   Serial.println("Emetteur ON");
+  delay(100);
+  digitalRead(PIN_OUT);
   delay(2000);
+
   // Emetteur eteint pendant 2 s
   digitalWrite(PIN_ENABLE, LOW);
   Serial.println("Emetteur OFF");
+  delay(100);
+  digitalRead(PIN_OUT);
   delay(2000);
 }
